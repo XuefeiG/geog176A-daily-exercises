@@ -50,7 +50,13 @@ to print the top 5 columns of the raw covid `object`
 Use `dplyr` verbs to  create a data.frame of the **5** counties with the most current cases. Remember, the cases and deaths are cumulative, so you only need to deal with the data for the most current (`max`) date.
 
 (**Hint:** `filter`, `arrange`)
-
+library(tidyverse)
+covid = read.csv("data/covid.csv")
+covid %>%
+  filter(cases > 0, date == max(date)) %>%
+  arrange(-cases) %>%
+  head(5) 
+  
 ```{r}
 
 ```

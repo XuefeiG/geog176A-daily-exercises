@@ -1,0 +1,60 @@
+---
+title: "Questions"
+author: "Xuefei Gao"
+date: "2020/8/12"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Question1-5 counties with the most current cases
+
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
+covid = read.csv("data/covid.csv")
+covid %>%
+  filter(date == max(date)) %>%
+  arrange(-cases) %>%
+  head(5) 
+```
+
+## Question2-5 states with the most cases current cases
+
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
+covid = read.csv("data/covid.csv")
+covid %>%
+  filter(date == max(date)) %>%
+  group_by(state) %>%
+  summarize(statetotal = sum(cases)) %>%
+  arrange(-statetotal) %>%
+  head(5) 
+```
+
+## Question3-5 counties with the worst current death/cases ratio
+
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
+covid = read.csv("data/covid.csv")
+covid %>% 
+  filter(cases>0,date == max(date)) %>%
+  mutate(ratio = 100*(deaths/cases)) %>%
+  arrange(-ratio) %>%
+  head(5)
+```
+
+## Question4-5 states with the worst current death/case ratio
+
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
+covid = read.csv("data/covid.csv")
+covid %>% 
+  filter(cases>0,date == max(date)) %>%
+  group_by(state) %>%
+  summarize(totalcases = sum(cases), totaldeaths =sum(deaths)) %>%
+  mutate(ratio = 100*(totaldeaths/totalcases)) %>%
+  arrange(-ratio) %>%
+  head(5)
+```
