@@ -26,6 +26,6 @@ inner_join(covid, region, by = "state") %>%
        x = "Date",
        y = "Daily Cases Count",
        caption = "Joins&Pivots-Daily Exercises 7") +
-  theme_bw() +
+  theme_igray() +
   theme(legend.position = "none")
   ggsave(file = "img/07Q1-Plot.png")
