@@ -3,8 +3,8 @@ library(tidyverse)
 library(USAboundaries)
 library(USAboundariesData)
 library(sf)
-states <- us_states()
-CONUS <- states %>%
+
+CONUS <- us_states %>%
   filter(name != "Alaska" & name != "Puerto Rico" & name != "Hawaii")
 
 CONUS_ls <- CONUS %>%
