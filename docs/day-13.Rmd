@@ -1,0 +1,30 @@
+---
+title: "day-13"
+author: "Xuefei Gao"
+date: "8/25/2020"
+output: html_document
+---
+```{r}
+library(tidyverse)
+library(USAboundaries)
+library(units)
+library(sf)
+library(rmapshaper)
+
+USconus = USAboundaries::us_states() %>%
+  filter(!state_name %in% c("Puerto Rico", "Alaska", "Hawaii")) %>%
+  st_transform(5070)
+```
+
+```{r}
+plot(USconus)
+mapview::npts(USconus)
+
+us5000 = st_simplify(USconus, dTolerance = 5000)
+plot(us5000)
+mapview::npts(us5000)
+
+us02 = ms_simplify(USconus, keep = 0.2)
+plot(us02)
+mapview::npts(us02)
+```
