@@ -1,0 +1,61 @@
+---
+title: "day-14"
+author: "Xuefei Gao"
+date: "8/26/2020"
+output: html_document
+---
+```{r}
+library(tidyverse)
+library(USAboundaries)
+library(dplyr)
+library(sf)
+library(rmapshaper)
+
+USconus = USAboundaries::us_states() %>%
+  st_as_sf(coords = c("lng", "lat"), crs = 4326)
+  
+get_conus = function(data, var){
+  filter(data, !get(var) %in% c("Puerto Rico", "Alaska", "Hawaii"))
+}
+
+cities = readr::read_csv("data/uscities.csv") %>%
+  st_as_sf(coords = c("lng", "lat"), crs = 4326) %>%
+  get_conus("state_name") %>%
+  dplyr::select(city, county_fips)
+
+counties = get_conus(USAboundaries::us_counties(), "state_name") %>%
+  st_transform(st_crs(cities)) %>%
+  dplyr::select(geoid)
+  
+polygon = get_conus(conus, "name") %>%
+  dplyr::select(name)
+
+join = st_join(polygon, cities) %>%
+  st_drop_geometry() %>%
+  count(name) %>%
+  left_join(polygon, by = 'name') %>%
+  st_as_sf()
+
+point_in_polygon3 = function(points, polygon, group){
+  st_join(polygon, points) %>%
+    st_drop_geometry() %>%
+    count(get(group)) %>%
+    setNames(c(group, "n")) %>%
+    left_join(polygon, by = group) %>%
+    st_as_sf()
+}
+
+plot_pip = function(data){
+  ggplot() +
+    geom_sf(data = data, aes(fill = log(n)), alpha = .9, size = .2) +
+    scale_fill_gradient(low = "white", high = "#50d0d0") +
+    theme_void() +
+    theme(legend.position = 'none',
+          plot.title = element_text(face = "bold", color = "#50d0d0", hjust = .5, size = 24)) +
+    labs(title = "Cities in Each County",
+         caption = paste0(sum(data$n), " Counties represented"))
+}
+
+point_in_polygon3(cities, counties, "geoid") %>%
+  plot_pip() %>%
+  ggsave(file = "img/14Q1-Plot.png")
