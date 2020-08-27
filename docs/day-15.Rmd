@@ -1,0 +1,79 @@
+---
+title: "day-15"
+author: "Xuefei Gao"
+date: "8/26/2020"
+output: html_document
+---
+```{r }
+library(tidyverse)
+library(sf)
+library(USAboundaries)
+library(gghighlight)
+library(rmapshaper)
+library(mapview)
+
+# Step 1.1  
+USconus = USAboundaries::us_counties() %>%
+  filter(!state_name %in% c("Puerto Rico", "Alaska", "Hawaii")) %>%
+  st_transform(5070)
+
+USconus_simp = ms_simplify(USconus, keep = 0.1)
+conusnpts = mapview::npts(USconus)
+simpnpts = mapview::npts(USconus_simp)
+
+# Step 1.2 
+county_centroid = st_centroid(USconus_simp) %>%
+  st_combine() %>%
+  st_cast("MULTIPOINT")
+
+# Step 1.3
+# Voroni
+voroni = st_voronoi(county_centroid) %>%
+  st_cast() %>%
+  st_as_sf %>%
+  mutate(id = 1:n())
+
+# Triangulated
+triangulated = st_triangulate(county_centroid) %>%
+  st_cast() %>%
+  st_as_sf() %>%
+  mutate(id = 1:n())
+
+# Gridded Coverage
+gridded = st_make_grid(USconus_simp, n = c(70, 50)) %>%
+  st_as_sf() %>%
+  st_cast() %>%
+  mutate(id = 1:n())
+
+# Hexagonal Coverage
+hexagonal = st_make_grid(USconus_simp, n = c(70, 50), square = FALSE) %>%
+  st_as_sf() %>%
+  st_cast() %>%
+  mutate(id = 1:n())
+
+# Step 1.6 
+plot = function(data, title)
+{ggplot() + 
+    geom_sf(data = data, fill = "white", col = "navy", size = .2) +   
+    theme_void() +
+    labs(title = title, caption = paste(nrow(data), "tiles" ))}
+
+# Original
+plot (data = USconus_simp, "Original")
+
+# Voroni
+voroni = st_intersection(voroni, st_union(USconus_simp))
+plot (voroni, "Voronoi Tessellatione") +
+  geom_sf(data = county_centroid, col = "#50d0d0", size = 0.2)
+
+# Triangulated
+triangulated = st_intersection(triangulated, st_union(USconus_simp))
+plot (triangulated, "Triangulated Tessellation") +
+  geom_sf(data = county_centroid, col = "#50d0d0", size = 0.2)
+
+# Gridded Coverage
+plot (gridded, "Gridded Coverage")
+
+# Hexagonal Coverage
+plot (hexagonal, "Hexagonal Coverage")
+```
