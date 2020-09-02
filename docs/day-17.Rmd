@@ -1,0 +1,30 @@
+---
+title: "day-17"
+author: "Xuefei Gao"
+date: "9/1/2020"
+output: html_document
+---
+```{r}
+library(tidyverse)
+library(sf)
+library(elevatr)
+library(readxl)
+library(rgdal)
+library(rmapshaper)
+library(raster)
+
+cities = read_csv("data/uscities.csv") %>%
+  st_as_sf(coords = c("lng", "lat"), crs = 4326) %>%
+  filter(city == "Goleta") %>%
+  st_transform(5070) %>%
+  st_buffer(5000) %>%
+  st_bbox() %>%
+  st_as_sfc() %>%
+  st_as_sf()
+
+elevation = elevatr::get_elev_raster(cities, z = 12) %>%
+  crop(cities) %>%
+  plot()
+
+#This raster shows the elevation of Goleta. The bbox values shows x and y range. The z value 12 shows the zoom over the plane, and the scale on the right shows the elevation are in meters. 
+```
