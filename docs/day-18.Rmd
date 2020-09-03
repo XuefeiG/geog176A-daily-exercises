@@ -29,11 +29,10 @@ e1 = raster("goleta-elev.tif")
 FUN = function(x){ ifelse(x > 0, 1, NA) }
 e2 = calc(e1, FUN)
 land = e2 * e1
-plot(land, color = viridis::viridis(256))
 
 rcl = data.frame(min = seq(0,500,100), max = seq(100,600,100), lab = c(0:5))
 rrc = reclassify(land, rcl, lowerTRUE = TRUE)
 s = stack(e1, e2, land, rrc) %>% 
   setNames(c("elevation", "land", "terrain", "topography"))
-plot(s, color = viridis::viridis((256)))
+plot(s, col = viridis::viridis((256)))
 ```
