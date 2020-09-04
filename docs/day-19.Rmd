@@ -1,0 +1,63 @@
+---
+title: "day-19"
+author: "Xuefei Gao"
+date: "9/3/2020"
+output: html_document
+---
+```{r}
+library(tidyverse)
+library(sf)
+library(elevatr)
+library(rgdal)
+library(rmapshaper)
+library(raster)
+library(osmdata)
+library(dplyr)
+library(leaflet)
+
+cities = read_csv("data/uscities.csv") %>%
+  st_as_sf(coords = c("lng", "lat"), crs = 4326) %>%
+  filter(city == "Goleta") %>%
+  st_transform(5070) %>%
+  st_buffer(5000) %>%
+  st_bbox() %>%
+  st_as_sfc() %>%
+  st_as_sf()
+
+elevation = elevatr::get_elev_raster(cities, z = 12) %>%
+  crop(cities) 
+  writeRaster(elevation, filename = "goleta-elev.tif", overwrite = TRUE)
+
+e1 = raster("goleta-elev.tif")
+FUN = function(x){ ifelse(x > 0, 1, NA) }
+e2 = calc(e1, FUN)
+land = e2 * e1
+
+rcl = data.frame(min = seq(0,500,100), max = seq(100,600,100), lab = c(0:5))
+rrc = reclassify(land, rcl, lowerTRUE = TRUE)
+s = stack(e1, e2, land, rrc) %>% 
+  setNames(c("elevation", "land", "terrain", "topography"))
+plot(s, col = viridis::viridis((256)))
+
+bb = st_bbox(s) %>% 
+  st_as_sfc() %>% 
+  st_transform(4326)
+
+osm = osmdata::opq(bb) %>%
+  add_osm_feature(key = 'amenity', value = "restaurant") %>%
+  osmdata_sf() 
+
+restaurant = osm$osm_points %>% 
+  filter(name != 'NA')
+
+restaurant = restaurant %>% 
+  mutate(e3 = raster::extract(elevation, restaurant))
+
+label = restaurant %>% 
+  dplyr::select(e3)
+
+leaflet() %>% 
+  addProviderTiles(providers$CartoDB) %>% 
+  addMarkers(data = restaurant, 
+             popup = leafpop::popupTable(st_drop_geometry(label), feature.id = FALSE, row.numbers = FALSE), label = ~name)
+```
