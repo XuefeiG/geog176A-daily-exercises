@@ -1,0 +1,57 @@
+---
+title: "day-20"
+author: "Xuefei Gao"
+date: "9/7/2020"
+output: html_document
+---
+```{r}
+library(elevatr)
+library(tidyverse)
+library(sf)
+library(raster)
+library(rgdal)
+library(climateR)
+library(USAboundaries)
+library(climateR)
+
+params = c("aet","swe", "tmax")
+area_interest = USAboundaries::us_states() %>%
+  filter(state_name == "Maine")
+mon = climateR::getTerraClim(area_interest, params, startDate = "2016-01-01", endDate = "2016-01-31") %>%
+  stack() %>%
+  setNames(params)
+plot(mon)
+
+values_aet = mon$aet %>%
+  values()
+idx = which(!is.na(values_aet))
+v = na.omit(values_aet)
+vs = scale(v)
+E = kmeans(vs, 5, iter.max = 100)
+clus_raster = mon$tmax
+values(clus_raster) = NA
+clus_raster[idx] = E$cluster
+plot(clus_raster, col = RColorBrewer::brewer.pal(5, "Spectral"))
+
+values_swe = mon$swe %>%
+  values()
+idx2 = which(!is.na(values_swe))
+v2 = na.omit(values_swe)
+vs2 = scale(v2)
+E2 = kmeans(vs2, 5, iter.max = 100)
+clus_raster2 = mon$tmax
+values(clus_raster2) = NA
+clus_raster2[idx] = E2$cluster
+plot(clus_raster2, col = RColorBrewer::brewer.pal(5, "Spectral"))
+ 
+values_tmax = mon$tmax %>%
+  values()
+idx3 = which(!is.na(values_tmax))
+v3 = na.omit(values_tmax)
+vs3 = scale(v3)
+E3 = kmeans(vs3, 5, iter.max = 100)
+clus_raster3 = mon$aet
+values(clus_raster3) = NA
+clus_raster3[idx] = E3$cluster
+plot(clus_raster3, col = RColorBrewer::brewer.pal(5, "Spectral"))
+```
