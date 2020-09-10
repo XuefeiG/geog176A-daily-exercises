@@ -1,0 +1,37 @@
+---
+title: "day-21"
+author: "Xuefei Gao"
+date: "9/9/2020"
+output: html_document
+---
+```{r}
+library(elevatr)
+library(tidyverse)
+library(sf)
+library(raster)
+library(rgdal)
+library(climateR)
+library(whitebox)
+
+mo = AOI::aoi_get("Mount Saint Helens") %>%
+  AOI::aoi_buffer(0.5)
+
+elev = elevatr::get_elev_raster(mo, z = 12) 
+
+writeRaster(elev, "data/mount_sthelens-elev.tif", overwrite = TRUE)
+wbt_hillshade("data/mount_sthelens-elev.tif", "data/mount_sthelens-hillshade.tif")
+wbt_slope("data/mount_sthelens-elev.tif", "data/mount_sthelens-slope.tif")
+wbt_aspect("data/mount_sthelens-elev.tif", "data/mount_sthelens-aspect.tif")
+
+ele = raster("data/mount_sthelens-elev.tif")
+plot(ele, axes = FALSE, box = FALSE, col = viridis::viridis(256), main = "Elevation")
+
+slope = raster("data/mount_sthelens-slope.tif")
+plot(slope, axes = FALSE, box = FALSE, col = terrain.colors(256), main = "Slope")
+
+aspect = raster("data/mount_sthelens-aspect.tif")
+plot(aspect, axes = FALSE, box = FALSE, col = rainbow(8), main = "Aspect")
+
+hillshade = raster("data/mount_sthelens-hillshade.tif")
+plot(hillshade, axes = FALSE, box = FALSE, col = gray.colors(256, alpha = 0.8), main = "Hillshade")
+```
